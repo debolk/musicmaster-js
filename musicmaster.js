@@ -4,7 +4,7 @@ function BrowseCapability(plugin)
     this.name = plugin.name;
 }
 
-BrowserCapability.prototype.open = function(success, failure) { return Directory.fromUri(this.uri, success, failure); };
+BrowseCapability.prototype.open = function(success, failure) { return Directory.fromUri(this.uri, success, failure); };
 function Directory(data, previous)
 {
     this.type = "directory";
@@ -15,7 +15,7 @@ function Directory(data, previous)
     this.previous = previous;
 }
 
-Directory.fromUri(uri, success, failure)
+Directory.fromUri = function(uri, success, failure)
 {
     MusicMaster.get(uri, function(request)
             {
@@ -23,7 +23,7 @@ Directory.fromUri(uri, success, failure)
             }, failure);
 }
 
-Directory.prototype.open(subdirectory)
+Directory.prototype.open = function(subdirectory)
 {
     MusicMaster.get(subdirectory, function(request)
             {
@@ -39,23 +39,27 @@ function Files(master)
     this.master = master;
 }
 
-Files.prototype.get(success, failure)
+Files.prototype.get = function(success, failure)
 {
-    master.get('files',
+    this.master.get('files',
             function(request) { success(request.responseJson.plugins); },
             failure);
 }
 
-Files.prototype.listCapability(name, success, failure)
+Files.prototype.listCapability = function(name, success, failure)
 {
     this.get(function(plugins){
         var result = [];
-        for(var plugin in plugins)
+        for(var id in plugins)
         {
+            var plugin = plugins[id];
             var matches = false;
-            for(var capability in plugin.capabilities)
+            for(var capability_id in plugin.capabilities)
+            {
+                var capability = plugin.capabilities[capability_id];
                 if(capability.name == name)
                     matches = true;
+            }
             
             if(matches)
                 result.push(plugin);
@@ -66,18 +70,21 @@ Files.prototype.listCapability(name, success, failure)
     }, failure);
 }
 
-Files.prototype.listBrowse(success, failure)
+Files.prototype.listBrowse = function(success, failure)
 {
     this.listCapability("browse", function(plugins)
             {
-                for(plugin in plugins)
+                var results = [];
+                for(id in plugins)
                 {
-                    plugin.open = function(BrowseCapability(plugin));
+                    var plugin = plugins[id];
+                    results.push(new BrowseCapability(plugin));
                 }
+                success(results);
             }, failure);
 }
 
-Files.prototype.listSearch(success, failure)
+Files.prototype.listSearch = function(success, failure)
 {
     this.listCapability("search", success, failure);
 }
@@ -87,7 +94,7 @@ function MjsPlayer(plugin)
     this.uri = plugin.url;
 }
 
-MjsPlayer.prototype.getPlaylist(success, failure)
+MjsPlayer.prototype.getPlaylist = function(success, failure)
 {
 
 }
@@ -106,18 +113,18 @@ MusicMaster._onload = function(success, failure)
     {
         try
         {
-            request.responseJson = JSON.parse(request.reponseText);
+            request.responseJson = JSON.parse(request.responseText);
         } catch (e) {
             console.log("Invalid json received: " + e.message);
             request.responseJson = {};
         }
-        if(request.status > 200 && request.status < 400)
+        if(request.status >= 200 && request.status < 400)
             success(request);
         else
             failure(request);
     }
 
-MusicMaster.get(uri, success, failure)
+MusicMaster.get = function(uri, success, failure)
 {
     request = new XMLHttpRequest();
     request.open('GET', uri, true);
@@ -127,7 +134,7 @@ MusicMaster.get(uri, success, failure)
     request.send();
 }
 
-MusicMaster.post(uri, data, success, failure)
+MusicMaster.post = function(uri, data, success, failure)
 {
     request = new XMLHttpRequest();
     request.open('POST', uri, true);
@@ -139,7 +146,7 @@ MusicMaster.post(uri, data, success, failure)
     request.send(encoding);
 }
 
-MusicMaster.delete(uri, success, failure)
+MusicMaster.delete = function(uri, success, failure)
 {    
     request = new XMLHttpRequest();
     request.open('DELETE', uri, true);
@@ -153,23 +160,27 @@ function Players(master)
     this.master = master;
 }
 
-Players.prototype.get(success, failure)
+Players.prototype.get = function(success, failure)
 {
-    master.get('player',
-            function(request) { success(request.responseJson.plugins); },
+    this.master.get('player',
+            function(request) { success(request.responseJson.players); },
             failure);
 }
 
-Players.prototype.listCapability(name, success, failure)
+Players.prototype.listCapability = function(name, success, failure)
 {
     this.get(function(plugins){
         var result = [];
-        for(var plugin in plugins)
+        for(var id in plugins)
         {
+            var plugin = plugins[id];
             var matches = false;
-            for(var capability in plugin.capabilities)
+            for(var capability_id in plugin.capabilities)
+            {
+                var capability = plugin.capabilities[capability_id];
                 if(capability.name == name)
                     matches = true;
+            }
             
             if(matches)
                 result.push(plugin);
@@ -180,14 +191,17 @@ Players.prototype.listCapability(name, success, failure)
     }, failure);
 }
 
-Players.prototype.listMjs(success, failure)
+Players.prototype.listMjs = function(success, failure)
 {
     this.listCapability("mjs", function(plugins)
             {
-                for(plugin in plugins)
+                var result = [];
+                for(id in plugins)
                 {
-                    plugin.open = function(MjsPlayer(plugin));
+                    plugin = plugins[id];
+                    result.push(new MjsPlayer(plugin));
                 }
+                success(result);
             }, failure);
 }
 function Playlist(data)
@@ -204,7 +218,7 @@ function PlaylistItem(data)
     this.songUri = data.song;
 }
 
-PlaylistItem.prototype.getSong(success, failure)
+PlaylistItem.prototype.getSong = function(success, failure)
 {
     return Song.fromUri(this.songUri, success, failure);
 }
@@ -218,7 +232,7 @@ function Song(data)
     this.uri = data.url;
 }
 
-Song.fromUri(uri, success, failure)
+Song.fromUri = function(uri, success, failure)
 {
     MusicMaster.get(uri, function(request)
             {

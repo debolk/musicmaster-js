@@ -4,4 +4,4 @@ function BrowseCapability(plugin)
     this.name = plugin.name;
 }
 
-BrowserCapability.prototype.open = function(success, failure) { return Directory.fromUri(this.uri, success, failure); };
+BrowseCapability.prototype.open = function(success, failure) { return Directory.fromUri(this.uri, success, failure); };

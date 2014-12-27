@@ -5,7 +5,7 @@ function PlaylistItem(data)
     this.songUri = data.song;
 }
 
-PlaylistItem.prototype.getSong(success, failure)
+PlaylistItem.prototype.getSong = function(success, failure)
 {
     return Song.fromUri(this.songUri, success, failure);
 }

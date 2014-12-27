@@ -13,18 +13,18 @@ MusicMaster._onload = function(success, failure)
     {
         try
         {
-            request.responseJson = JSON.parse(request.reponseText);
+            request.responseJson = JSON.parse(request.responseText);
         } catch (e) {
             console.log("Invalid json received: " + e.message);
             request.responseJson = {};
         }
-        if(request.status > 200 && request.status < 400)
+        if(request.status >= 200 && request.status < 400)
             success(request);
         else
             failure(request);
     }
 
-MusicMaster.get(uri, success, failure)
+MusicMaster.get = function(uri, success, failure)
 {
     request = new XMLHttpRequest();
     request.open('GET', uri, true);
@@ -34,7 +34,7 @@ MusicMaster.get(uri, success, failure)
     request.send();
 }
 
-MusicMaster.post(uri, data, success, failure)
+MusicMaster.post = function(uri, data, success, failure)
 {
     request = new XMLHttpRequest();
     request.open('POST', uri, true);
@@ -46,7 +46,7 @@ MusicMaster.post(uri, data, success, failure)
     request.send(encoding);
 }
 
-MusicMaster.delete(uri, success, failure)
+MusicMaster.delete = function(uri, success, failure)
 {    
     request = new XMLHttpRequest();
     request.open('DELETE', uri, true);

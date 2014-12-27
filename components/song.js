@@ -7,7 +7,7 @@ function Song(data)
     this.uri = data.url;
 }
 
-Song.fromUri(uri, success, failure)
+Song.fromUri = function(uri, success, failure)
 {
     MusicMaster.get(uri, function(request)
             {

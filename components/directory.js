@@ -8,7 +8,7 @@ function Directory(data, previous)
     this.previous = previous;
 }
 
-Directory.fromUri(uri, success, failure)
+Directory.fromUri = function(uri, success, failure)
 {
     MusicMaster.get(uri, function(request)
             {
@@ -16,7 +16,7 @@ Directory.fromUri(uri, success, failure)
             }, failure);
 }
 
-Directory.prototype.open(subdirectory)
+Directory.prototype.open = function(subdirectory)
 {
     MusicMaster.get(subdirectory, function(request)
             {

@@ -4,7 +4,7 @@ function MjsPlayer(plugin)
     this.uri = plugin.url;
 }
 
-MjsPlayer.prototype.getPlaylist(success, failure)
+MjsPlayer.prototype.getPlaylist = function(success, failure)
 {
 
 }
