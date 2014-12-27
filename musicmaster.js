@@ -19,7 +19,7 @@ Directory.fromUri = function(uri, success, failure)
 {
     MusicMaster.get(uri, function(request)
             {
-                success(new Directory(success.responseJson));
+                success(new Directory(request.responseJson));
             }, failure);
 }
 
@@ -41,7 +41,7 @@ function Files(master)
 
 Files.prototype.get = function(success, failure)
 {
-    this.master.get('files',
+    this.master.get('plugin/',
             function(request) { success(request.responseJson.plugins); },
             failure);
 }

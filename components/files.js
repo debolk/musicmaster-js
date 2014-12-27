@@ -5,7 +5,7 @@ function Files(master)
 
 Files.prototype.get = function(success, failure)
 {
-    this.master.get('files',
+    this.master.get('plugin/',
             function(request) { success(request.responseJson.plugins); },
             failure);
 }

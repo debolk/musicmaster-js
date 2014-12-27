@@ -12,7 +12,7 @@ Directory.fromUri = function(uri, success, failure)
 {
     MusicMaster.get(uri, function(request)
             {
-                success(new Directory(success.responseJson));
+                success(new Directory(request.responseJson));
             }, failure);
 }
 
