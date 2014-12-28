@@ -23,9 +23,9 @@ Directory.fromUri = function(uri, success, failure)
             }, failure);
 }
 
-Directory.prototype.open = function(subdirectory, success, failure)
+Directory.prototype.open = function(filename, success, failure)
 {
-    MusicMaster.get(subdirectory, function(request)
+    MusicMaster.get(filename, function(request)
             {
                 var result = request.responseJson;
                 if(result.type == "song")
@@ -96,7 +96,35 @@ function MjsPlayer(plugin)
 
 MjsPlayer.prototype.getPlaylist = function(success, failure)
 {
+    Playlist.fromUri(this.uri + "/playlist", success, failure);
+}
 
+MjsPlayer.prototype.getStatus = function(success, failure)
+{
+    MusicMaster.get(uri + "/status", function(request) {
+        success(request.responseJson.status);
+    }, failure);
+}
+
+MjsPlayer.prototype.setStatus = function(status, success, failure)
+{
+    var data = {"status": status};
+    MusicMaster.put(uri + "/status", data, success, failure);
+}
+
+MjsPlayer.prototype.play = function(success, failure)
+{
+    this.setStatus("playing", success, failure);
+}
+
+MjsPlayer.prototype.pause = function(success, failure)
+{
+    this.setStatus("paused", success, failure);
+}
+
+MjsPlayer.prototype.stop = function(success, failure)
+{
+    this.setStatus("stopped", success, failure);
 }
 function MusicMaster(uri)
 {
@@ -106,6 +134,8 @@ function MusicMaster(uri)
     this.players = new Players(this);
     this.files = new Files(this);
 }
+
+MusicMaster.accessToken = "";
 
 //Utility functions
 
@@ -136,6 +166,14 @@ MusicMaster.get = function(uri, success, failure)
 
 MusicMaster.post = function(uri, data, success, failure)
 {
+    if(MusicMaster.accessToken != "")
+    {
+        if(uri.indexOf("?") == -1)
+            uri = uri + "?access_token=" + MusicMaster.accessToken;
+        else
+            uri = uri + "&access_token=" + MusicMaster.accessToken;
+    }
+
     request = new XMLHttpRequest();
     request.open('POST', uri, true);
     request.onload = function() { MusicMaster._onload(success, failure); };
@@ -147,9 +185,36 @@ MusicMaster.post = function(uri, data, success, failure)
 }
 
 MusicMaster.delete = function(uri, success, failure)
-{    
+{
+    if(MusicMaster.accessToken != "")
+    {
+        if(uri.indexOf("?") == -1)
+            uri = uri + "?access_token=" + MusicMaster.accessToken;
+        else
+            uri = uri + "&access_token=" + MusicMaster.accessToken;
+    }
+
+        
     request = new XMLHttpRequest();
     request.open('DELETE', uri, true);
+    request.onload = function() { MusicMaster._onload(success, failure); };
+    request.onerror = failure;
+
+    request.send();
+}
+
+MusicMaster.put = function(uri, success, failure)
+{
+    if(MusicMaster.accessToken != "")
+    {
+        if(uri.indexOf("?") == -1)
+            uri = uri + "?access_token=" + MusicMaster.accessToken;
+        else
+            uri = uri + "&access_token=" + MusicMaster.accessToken;
+    }
+
+    request = new XMLHttpRequest();
+    request.open('PUT', uri, true);
     request.onload = function() { MusicMaster._onload(success, failure); };
     request.onerror = failure;
 
@@ -204,18 +269,111 @@ Players.prototype.listMjs = function(success, failure)
                 success(result);
             }, failure);
 }
-function Playlist(data)
+function Playlist(uri, data)
 {
+    this.uri = uri;
     this.items = [];
+    this.uids = [];
 
     for(var item in data.items)
-        this.items.append(new PlaylistItem(data));
+    {
+        var item = new PlaylistItem(data);
+        this.items.push(item);
+        this.uids.push(item.uri);
+    }
+
+    this.onAdd = function(playlistItem, index){};
+}
+
+Playlist.fromUri = function(uri, success, failure)
+{
+    MusicMaster.get(uri, function(request) {
+        success(new Playlist(uri, request.responseJson));
+    }, failure);
+}
+
+Playlist.prototype.push = function(song, success, failure)
+{
+    MusicMaster.post(this.uri, song, success, failure);
+}
+
+Playlist.prototype.insert = function(song, before, success, failure)
+{
+    MusicMaster.post(before.uri, song, success, failure);
+}
+
+Playlist.prototype.update = function(success, failure)
+{
+    var orig = this;
+    Playlist.fromUri(this.uri, function(newplaylist)
+            {
+                var removelist = [];
+                var addlist = [];
+                
+                for(var i = 0; i < orig.uids.length; i++)
+                    if(newplaylist.uids.indexOf(orig.uids[i].uri) == -1)
+                        removelist.push(orig.uids[i].uri);
+
+                for(var i = 0; i < newplaylist.uids.lenght; i++)
+                    if(orig.uids.indexOf(newplaylist.uids[i].uri) == -1)
+                        addlist.push(newplaylist.uids[i].uri);
+
+                for(var i = 0; i < removelist.length; i++)
+                {
+                    var uri = removelist[i];
+                    orig.uids.splice(orig.uids.indexOf(uri), 1);
+                    for(var j = 0; j < orig.items.length; j++)
+                        if(orig.items[j].uri == uri)
+                        {
+                            var item = orig.items[j];
+                            orig.items.splice(j, 1);
+                            item.onRemove(item, j);
+                            break;
+                        }
+                }
+
+                for(var i = 0; i < addlist.length; i++)
+                {
+                    var uri = addlist[i];
+                    orig.uids.push(uri);
+                    for(var j = 0; j < newplaylist.items.length; j++)
+                        if(newplaylist.items[j].uri == uri)
+                        {
+                            var item = newplaylist.items[j];
+                            orig.items.splice(j, 0, item);
+                            orig.onAdd(item, j);
+                        }
+                }
+
+                for(var i = 0; i < orig.items.length; i++)
+                {
+                    if(orig.items[i].uri == newplaylist.items[i].uri)
+                        break;
+
+                    var item = orig.items[i];
+                    for(var j = 0; j < newplaylist.items.length; j++)
+                    {
+                        if(item.uri != newplaylist.items[j].uri)
+                            continue;
+
+                        orig.items.splice(i, 1);
+                        orig.items.splice(j, 0, item);
+                        item.onMove(item, i, j);
+                        i--;
+                        break;
+                    }
+                }
+
+            }, failure);
 }
 function PlaylistItem(data)
 {
     this.uri = data.url;
     this.location = data.url;
     this.songUri = data.song;
+
+    this.onRemove = function(playlistItem, index){};
+    this.onMove = function(playlistItem, oldindex, newindex){};
 }
 
 PlaylistItem.prototype.getSong = function(success, failure)

@@ -14,24 +14,24 @@ function Playlist(uri, data)
     this.onAdd = function(playlistItem, index){};
 }
 
-Playlist.fromUri(uri, success, failure)
+Playlist.fromUri = function(uri, success, failure)
 {
     MusicMaster.get(uri, function(request) {
         success(new Playlist(uri, request.responseJson));
     }, failure);
 }
 
-Playlist.prototype.push(song, success, failure)
+Playlist.prototype.push = function(song, success, failure)
 {
     MusicMaster.post(this.uri, song, success, failure);
 }
 
-Playlist.prototype.insert(song, before, success, failure)
+Playlist.prototype.insert = function(song, before, success, failure)
 {
     MusicMaster.post(before.uri, song, success, failure);
 }
 
-Playlist.prototype.update(success, failure)
+Playlist.prototype.update = function(success, failure)
 {
     var orig = this;
     Playlist.fromUri(this.uri, function(newplaylist)
