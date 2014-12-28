@@ -61,3 +61,51 @@ Files
 
 A class for finding playable music
 
+`Files.get(success, failure)`: Returns a list of plugins enabled on the musicmaster server
+
+`Files.listCapability(name, success, failure)`: Returns a list of plugins that have the specified capability name
+
+`Files.listBrowse(success, failure)`: Returns a list of BrowseCapability objects
+
+`Files.listSearch(success, failure)`: Returns a list of SearchCapability objects
+
+BrowseCapability
+----------------
+
+Represents a reference to a browseable music repository
+
+BrowseCapability.open(success, failure)`: Returns a Directory representing the root of this repository.
+
+Directory
+---------
+
+Represents a directory in a music repository
+
+`Directory.type`: Constant "directory"
+
+`Directory.name`: The name of this directory
+
+`Directory.previous`: The parent directory or null if none / unknown
+
+`Directory.entries`: A list of subdirectories (as uri)
+
+`Directory.open(filename, success, failure)`: Opens a subdirectory or a song and returns the corresponding object
+
+static `Directory.fromUri(uri, success, failure)`: Parses a uri to a directory
+
+Song
+----
+
+`Song.type`: Constant "song"
+
+`Song.title`: The title of the song or null if there are no readable id3 tags
+
+`Song.artist`: The artist of the song or null if there are no readable id3 tags
+
+`Song.location`: The address where the player can find the audio file. This is not guaranteed to be reachable from the browser.
+
+`Song.uri`: The uri for this song.
+
+static `Song.fromUri(uri, success, failure)`: Parses a Song object from a given uri and returns it.
+
+

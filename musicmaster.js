@@ -23,7 +23,7 @@ Directory.fromUri = function(uri, success, failure)
             }, failure);
 }
 
-Directory.prototype.open = function(subdirectory)
+Directory.prototype.open = function(subdirectory, success, failure)
 {
     MusicMaster.get(subdirectory, function(request)
             {

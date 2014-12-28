@@ -16,9 +16,9 @@ Directory.fromUri = function(uri, success, failure)
             }, failure);
 }
 
-Directory.prototype.open = function(subdirectory)
+Directory.prototype.open = function(filename, success, failure)
 {
-    MusicMaster.get(subdirectory, function(request)
+    MusicMaster.get(filename, function(request)
             {
                 var result = request.responseJson;
                 if(result.type == "song")
