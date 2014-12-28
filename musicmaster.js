@@ -139,7 +139,7 @@ MusicMaster.accessToken = "";
 
 //Utility functions
 
-MusicMaster._onload = function(success, failure)
+MusicMaster._onload = function(request, success, failure)
     {
         try
         {
@@ -149,16 +149,20 @@ MusicMaster._onload = function(success, failure)
             request.responseJson = {};
         }
         if(request.status >= 200 && request.status < 400)
+        {
             success(request);
+        }
         else
+        {
             failure(request);
+        }
     }
 
 MusicMaster.get = function(uri, success, failure)
 {
-    request = new XMLHttpRequest();
+    var request = new XMLHttpRequest();
     request.open('GET', uri, true);
-    request.onload = function() { MusicMaster._onload(success, failure); };
+    request.onload = function() { MusicMaster._onload(request, success, failure); };
     request.onerror = failure;
 
     request.send();
@@ -174,9 +178,9 @@ MusicMaster.post = function(uri, data, success, failure)
             uri = uri + "&access_token=" + MusicMaster.accessToken;
     }
 
-    request = new XMLHttpRequest();
+    var request = new XMLHttpRequest();
     request.open('POST', uri, true);
-    request.onload = function() { MusicMaster._onload(success, failure); };
+    request.onload = function() { MusicMaster._onload(request, success, failure); };
     request.onerror = failure;
 
     var encoding = JSON.stringify(data);
@@ -195,9 +199,9 @@ MusicMaster.delete = function(uri, success, failure)
     }
 
         
-    request = new XMLHttpRequest();
+    var request = new XMLHttpRequest();
     request.open('DELETE', uri, true);
-    request.onload = function() { MusicMaster._onload(success, failure); };
+    request.onload = function() { MusicMaster._onload(request, success, failure); };
     request.onerror = failure;
 
     request.send();
@@ -213,9 +217,9 @@ MusicMaster.put = function(uri, success, failure)
             uri = uri + "&access_token=" + MusicMaster.accessToken;
     }
 
-    request = new XMLHttpRequest();
+    var request = new XMLHttpRequest();
     request.open('PUT', uri, true);
-    request.onload = function() { MusicMaster._onload(success, failure); };
+    request.onload = function() { MusicMaster._onload(request, success, failure); };
     request.onerror = failure;
 
     request.send();
