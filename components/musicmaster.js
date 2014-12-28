@@ -7,6 +7,8 @@ function MusicMaster(uri)
     this.files = new Files(this);
 }
 
+MusicMaster.accessToken = "";
+
 //Utility functions
 
 MusicMaster._onload = function(success, failure)
@@ -36,6 +38,14 @@ MusicMaster.get = function(uri, success, failure)
 
 MusicMaster.post = function(uri, data, success, failure)
 {
+    if(MusicMaster.accessToken != "")
+    {
+        if(uri.indexOf("?") == -1)
+            uri = uri + "?access_token=" + MusicMaster.accessToken;
+        else
+            uri = uri + "&access_token=" + MusicMaster.accessToken;
+    }
+
     request = new XMLHttpRequest();
     request.open('POST', uri, true);
     request.onload = function() { MusicMaster._onload(success, failure); };

@@ -15,6 +15,12 @@ The root object for this library. Create a MusicMaster object that points to you
 
 `MusicMaster.files`: A reference to an instance of the `Files` object
 
+static `MusicMaster.accessToken`: For certain operations authorization is required, for those operations a valid access token is required. This token can be obtained through oauth (see http://auth.debolk.nl)
+
+static `MusicMaster.get(uri, success, failure)`: GETs a particular uri, parses the results to JSON and returns it
+
+static `MusicMaster.post(uri, data, success, failure)`: Converts the data to json representation, appends the accessToken to the uri, parses the results from JSON and resturns the result.
+
 Players
 -------
 
