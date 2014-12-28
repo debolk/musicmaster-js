@@ -29,7 +29,21 @@ MjsPlayer
 
 A class for interacting with an MJS client
 
+`MjsPlayer.name`: The name of the current player
+
+`MjsPlayer.uri`: The uri of the current player
+
 `MjsPlayer.getPlaylist(success, failure)`: Returns a Playlist object
+
+`MjsPlayer.getStatus(success, failure)`: Returns the current status of the player (playing, paused, stopped)
+
+`MjsPlayer.setStatus(status, success, failure)`: Sets the player status to a specific value (playing, paused, stopped)
+
+`MjsPlayer.play(success, failure)`: Resumes playing in the player
+
+`MjsPlayer.pause(success, failure)`: Pauses the playback in the player
+
+`MjsPlayer.stop(success, failure)`: Stops playback in the player
 
 Playlist
 --------
