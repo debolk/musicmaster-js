@@ -6,7 +6,7 @@ function MjsPlayer(plugin)
 
 MjsPlayer.prototype.getPlaylist = function(success, failure)
 {
-
+    Playlist.fromUri(this.uri + "/playlist", success, failure);
 }
 
 MjsPlayer.prototype.getStatus = function(success, failure)

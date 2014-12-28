@@ -58,6 +58,8 @@ Represents a playlist
 
 `Playlist.items`: A list of PlaylistItem objects
 
+static `Playlist.fromUri(success, failure)`: Parses a playlist from a given uri
+
 PlaylistItem
 ------------
 
