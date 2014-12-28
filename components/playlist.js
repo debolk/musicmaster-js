@@ -4,9 +4,10 @@ function Playlist(uri, data)
     this.items = [];
     this.uids = [];
 
-    for(var item in data.items)
+    for(var itemid in data.items)
     {
-        var item = new PlaylistItem(data);
+        var itemdata = data.items[itemid];
+        var item = new PlaylistItem(itemdata);
         this.items.push(item);
         this.uids.push(item.uri);
     }
@@ -40,12 +41,12 @@ Playlist.prototype.update = function(success, failure)
                 var addlist = [];
                 
                 for(var i = 0; i < orig.uids.length; i++)
-                    if(newplaylist.uids.indexOf(orig.uids[i].uri) == -1)
-                        removelist.push(orig.uids[i].uri);
+                    if(newplaylist.uids.indexOf(orig.uids[i]) == -1)
+                        removelist.push(orig.uids[i]);
 
-                for(var i = 0; i < newplaylist.uids.lenght; i++)
-                    if(orig.uids.indexOf(newplaylist.uids[i].uri) == -1)
-                        addlist.push(newplaylist.uids[i].uri);
+                for(var i = 0; i < newplaylist.uids.length; i++)
+                    if(orig.uids.indexOf(newplaylist.uids[i]) == -1)
+                        addlist.push(newplaylist.uids[i]);
 
                 for(var i = 0; i < removelist.length; i++)
                 {
@@ -92,6 +93,8 @@ Playlist.prototype.update = function(success, failure)
                         break;
                     }
                 }
+
+                success(orig);
 
             }, failure);
 }
