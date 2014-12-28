@@ -57,9 +57,36 @@ MusicMaster.post = function(uri, data, success, failure)
 }
 
 MusicMaster.delete = function(uri, success, failure)
-{    
+{
+    if(MusicMaster.accessToken != "")
+    {
+        if(uri.indexOf("?") == -1)
+            uri = uri + "?access_token=" + MusicMaster.accessToken;
+        else
+            uri = uri + "&access_token=" + MusicMaster.accessToken;
+    }
+
+        
     request = new XMLHttpRequest();
     request.open('DELETE', uri, true);
+    request.onload = function() { MusicMaster._onload(success, failure); };
+    request.onerror = failure;
+
+    request.send();
+}
+
+MusicMaster.put = function(uri, success, failure)
+{
+    if(MusicMaster.accessToken != "")
+    {
+        if(uri.indexOf("?") == -1)
+            uri = uri + "?access_token=" + MusicMaster.accessToken;
+        else
+            uri = uri + "&access_token=" + MusicMaster.accessToken;
+    }
+
+    request = new XMLHttpRequest();
+    request.open('PUT', uri, true);
     request.onload = function() { MusicMaster._onload(success, failure); };
     request.onerror = failure;
 

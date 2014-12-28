@@ -58,12 +58,22 @@ Represents a playlist
 
 `Playlist.items`: A list of PlaylistItem objects
 
+`Playlist.onAdd`: A function(playlistItem, index) that gets called during `update()` when a new playlist item is detected
+
+`Playlist.append(song, success, failure)`: Appends a song to the playlist
+
+`Playlist.insert(song, before, success, failure)`: Appends a song before a specific PlaylistItem
+
 static `Playlist.fromUri(success, failure)`: Parses a playlist from a given uri
 
 PlaylistItem
 ------------
 
 Represents a song in a playlist
+
+`PlaylistItem.onMove`: A function(playlistItem, oldindex, newindex) that gets called during `Playlist.update()` when a playlist item is moved (may be called multiple times)
+
+`PlaylistItem.onRemove`: A function(playlistItem, index) that gets called during `Playlist.update()` when a playlist item is removed.
 
 `PlaylistItem.getSong(success, failure)`: Gets the Song object corresponding to this playlist item
 

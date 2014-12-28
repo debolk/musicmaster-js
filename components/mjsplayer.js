@@ -19,7 +19,7 @@ MjsPlayer.prototype.getStatus = function(success, failure)
 MjsPlayer.prototype.setStatus = function(status, success, failure)
 {
     var data = {"status": status};
-    MusicMaster.post(uri + "/status", data, success, failure);
+    MusicMaster.put(uri + "/status", data, success, failure);
 }
 
 MjsPlayer.prototype.play = function(success, failure)
