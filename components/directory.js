@@ -22,7 +22,7 @@ Directory.prototype.open = function(filename, success, failure)
             {
                 var result = request.responseJson;
                 if(result.type == "song")
-                    success(new Song(result));
+                    success(new Song(filename, result));
                 if(result.type == "directory")
                     success(new Directory(result, this));
             }, failure);

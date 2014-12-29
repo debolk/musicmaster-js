@@ -10,6 +10,16 @@ function PlaylistItem(data)
 
 PlaylistItem.prototype.getSong = function(success, failure)
 {
-    return Song.fromUri(this.songUri, success, failure);
+    if(this.song != undefined)
+    {
+        success(this.song);
+        return;
+    }
+
+    Song.fromUri(this.songUri, function(song)
+            {
+                this.song = song;
+                success(song);
+            }, failure);
 }
 

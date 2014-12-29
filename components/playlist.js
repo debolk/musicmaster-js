@@ -3,6 +3,7 @@ function Playlist(uri, data)
     this.uri = uri;
     this.items = [];
     this.uids = [];
+    this.prefetch = false;
 
     for(var itemid in data.items)
     {
@@ -15,10 +16,41 @@ function Playlist(uri, data)
     this.onAdd = function(playlistItem, index){};
 }
 
-Playlist.fromUri = function(uri, success, failure)
+Playlist.fromUri = function(uri, success, failure, prefetch)
 {
+    if(prefetch == undefined)
+        prefetch = false;
+
     MusicMaster.get(uri, function(request) {
-        success(new Playlist(uri, request.responseJson));
+        var playlist = new Playlist(uri, request.responseJson);
+
+        if(!prefetch)
+        {
+            success(playlist);
+            return;
+        }
+
+        playlist.prefetch = true;
+
+        var left = 0;
+        var errorResponse = undefined;
+
+        var done = function()
+        {
+            left--;
+            if(left > 0)
+                return;
+            
+            if(errorResponse != undefined)
+                failure(errorResponse);
+            else
+                success(playlist);
+        }
+
+        left = playlist.items.length;
+        for(var i = 0; i < left; i++)
+            playlist.items[i].getSong(done, function(e) { errorResponse = e; done(); });
+
     }, failure);
 }
 
@@ -96,5 +128,5 @@ Playlist.prototype.update = function(success, failure)
 
                 success(orig);
 
-            }, failure);
+            }, failure, prefetch);
 }

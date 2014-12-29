@@ -29,7 +29,7 @@ Directory.prototype.open = function(filename, success, failure)
             {
                 var result = request.responseJson;
                 if(result.type == "song")
-                    success(new Song(result));
+                    success(new Song(filename, result));
                 if(result.type == "directory")
                     success(new Directory(result, this));
             }, failure);
@@ -94,6 +94,68 @@ function MjsPlayer(plugin)
     this.uri = plugin.url;
 }
 
+MjsPlayer.prototype.initialize = function(success, failure)
+{
+    var orig = this;
+    this.getPlaylist(function(playlist){
+        orig.playlist = playlist;
+        success();
+    }, failure);
+}
+
+MjsPlayer.prototype.update = function(success, failure)
+{
+    var orig = this;
+    if(this.playlist == undefined)
+    {
+        failure({"error": "Player not initialized"});
+        return;
+    }
+
+    var count = 0;
+    var errorRequest = undefined;
+
+    var close = function()
+    {
+        count++;
+        if(count < 3)
+            return;
+
+        if(errorRequest != undefined)
+            failure(errorRequest);
+        else
+            success();
+    }
+
+    var error = function(request)
+    {
+        errorRequest = request;
+        close();
+    }
+
+    this.playlist.update(close, error);
+    this.getCurrent(function(state)
+            {
+                orig.currentState = state;
+                orig.currentSong = state.song;
+                orig.currentItem = state.url;
+                orig.duration = state.duration;
+                orig.position = state.position;
+                
+                if(orig.position == undefined)
+                    orig.estimatedStart = undefined;
+                else
+                    orig.estimatedStart = Date.now() - Date(orig.position * 1000);
+
+                close();
+            }, error);
+    this.getStatus(function(state)
+            {
+                orig.status = state;
+                close();
+            }, error);
+}
+
 MjsPlayer.prototype.getPlaylist = function(success, failure)
 {
     Playlist.fromUri(this.uri + "/playlist", success, failure);
@@ -101,7 +163,7 @@ MjsPlayer.prototype.getPlaylist = function(success, failure)
 
 MjsPlayer.prototype.getStatus = function(success, failure)
 {
-    MusicMaster.get(uri + "/status", function(request) {
+    MusicMaster.get(this.uri + "/status", function(request) {
         success(request.responseJson.status);
     }, failure);
 }
@@ -109,7 +171,19 @@ MjsPlayer.prototype.getStatus = function(success, failure)
 MjsPlayer.prototype.setStatus = function(status, success, failure)
 {
     var data = {"status": status};
-    MusicMaster.put(uri + "/status", data, success, failure);
+    MusicMaster.put(this.uri + "/status", data, success, failure);
+}
+
+MjsPlayer.prototype.getCurrent = function(success, failure)
+{
+    MusicMaster.get(this.uri + "/current", function(request){
+        success(request.responseJson);
+    }, failure);
+}
+
+MjsPlayer.prototype.setCurrent = function(playlistItem, success, failure)
+{
+    MusicMaster.put(this.uri + "/current", {"uid": playlistItem.uri}, success, failure);
 }
 
 MjsPlayer.prototype.play = function(success, failure)
@@ -125,6 +199,16 @@ MjsPlayer.prototype.pause = function(success, failure)
 MjsPlayer.prototype.stop = function(success, failure)
 {
     this.setStatus("stopped", success, failure);
+}
+
+MjsPlayer.prototype.next = function(success, failure)
+{
+    MusicMaster.post(this.uri + "/current", {"action": "next"}, success, failure);
+}
+
+MjsPlayer.prototype.previous = function(success, failure)
+{
+    MusicMaster.post(this.uri + "/current", {"action": "previous"}, success, failure);
 }
 function MusicMaster(uri)
 {
@@ -278,6 +362,7 @@ function Playlist(uri, data)
     this.uri = uri;
     this.items = [];
     this.uids = [];
+    this.prefetch = false;
 
     for(var itemid in data.items)
     {
@@ -290,10 +375,41 @@ function Playlist(uri, data)
     this.onAdd = function(playlistItem, index){};
 }
 
-Playlist.fromUri = function(uri, success, failure)
+Playlist.fromUri = function(uri, success, failure, prefetch)
 {
+    if(prefetch == undefined)
+        prefetch = false;
+
     MusicMaster.get(uri, function(request) {
-        success(new Playlist(uri, request.responseJson));
+        var playlist = new Playlist(uri, request.responseJson);
+
+        if(!prefetch)
+        {
+            success(playlist);
+            return;
+        }
+
+        playlist.prefetch = true;
+
+        var left = 0;
+        var errorResponse = undefined;
+
+        var done = function()
+        {
+            left--;
+            if(left > 0)
+                return;
+            
+            if(errorResponse != undefined)
+                failure(errorResponse);
+            else
+                success(playlist);
+        }
+
+        left = playlist.items.length;
+        for(var i = 0; i < left; i++)
+            playlist.items[i].getSong(done, function(e) { errorResponse = e; done(); });
+
     }, failure);
 }
 
@@ -369,7 +485,9 @@ Playlist.prototype.update = function(success, failure)
                     }
                 }
 
-            }, failure);
+                success(orig);
+
+            }, failure, prefetch);
 }
 function PlaylistItem(data)
 {
@@ -383,22 +501,35 @@ function PlaylistItem(data)
 
 PlaylistItem.prototype.getSong = function(success, failure)
 {
-    return Song.fromUri(this.songUri, success, failure);
+    if(this.song != undefined)
+    {
+        success(this.song);
+        return;
+    }
+
+    Song.fromUri(this.songUri, function(song)
+            {
+                this.song = song;
+                success(song);
+            }, failure);
 }
 
-function Song(data)
+function Song(uri, data)
 {
+    this.uri = uri;
+
     this.type = "song";
     this.title = data.title;
     this.artist = data.artist;
     this.location = data.location;
-    this.uri = data.url;
+    if(data.url != undefined)
+        this.uri = data.url;
 }
 
 Song.fromUri = function(uri, success, failure)
 {
     MusicMaster.get(uri, function(request)
             {
-                success(new Song(request.responseJson));
+                success(new Song(uri, request.responseJson));
             }, failure);
 }
