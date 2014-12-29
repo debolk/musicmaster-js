@@ -1,8 +1,15 @@
+/**
+ * A class for finding players
+ * @constructor
+ */
 function Players(master)
 {
     this.master = master;
 }
 
+/**
+ * Fetches the list of players
+ */
 Players.prototype.get = function(success, failure)
 {
     this.master.get('player',
@@ -10,7 +17,10 @@ Players.prototype.get = function(success, failure)
             failure);
 }
 
-Players.prototype.listCapability = function(name, success, failure)
+/**
+ * Returns a list of players that have a specified capability name
+ */
+Players.prototype.getCapability = function(name, success, failure)
 {
     this.get(function(plugins){
         var result = [];
@@ -34,9 +44,12 @@ Players.prototype.listCapability = function(name, success, failure)
     }, failure);
 }
 
-Players.prototype.listMjs = function(success, failure)
+/**
+ * Returns a list of MjsPlayer objects
+ */
+Players.prototype.getMjs = function(success, failure)
 {
-    this.listCapability("mjs", function(plugins)
+    this.getCapability("mjs", function(plugins)
             {
                 var result = [];
                 for(id in plugins)

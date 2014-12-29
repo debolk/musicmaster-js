@@ -1,8 +1,16 @@
+/**
+ * Represents a playlist
+ * @constructor
+ */
 function Playlist(uri, data)
 {
+    /** The uri of the playlist */
     this.uri = uri;
+    /** A list of PlaylistItem objects */
     this.items = [];
+    /** The list of uids in this playlist */
     this.uids = [];
+    /** Wether PlaylistItems should automatically fetch songdata */
     this.prefetch = false;
 
     for(var itemid in data.items)
@@ -13,9 +21,13 @@ function Playlist(uri, data)
         this.uids.push(item.uri);
     }
 
+    /** An overridable function that gets called when a new PlaylistItem is added during an update */
     this.onAdd = function(playlistItem, index){};
 }
 
+/**
+ * Parses a playlist from a given uri
+ */
 Playlist.fromUri = function(uri, success, failure, prefetch)
 {
     if(prefetch == undefined)
@@ -54,16 +66,25 @@ Playlist.fromUri = function(uri, success, failure, prefetch)
     }, failure);
 }
 
-Playlist.prototype.push = function(song, success, failure)
+/**
+ * Appends a song to the playlist
+ */
+Playlist.prototype.append = function(song, success, failure)
 {
     MusicMaster.post(this.uri, song, success, failure);
 }
 
+/** 
+ * Inserts a song before a specific PlaylistItem 
+ */
 Playlist.prototype.insert = function(song, before, success, failure)
 {
     MusicMaster.post(before.uri, song, success, failure);
 }
 
+/**
+ * Automatically updates the current playlist with the version on the remote player
+ */
 Playlist.prototype.update = function(success, failure)
 {
     var orig = this;

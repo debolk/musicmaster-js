@@ -1,8 +1,16 @@
+/**
+ * A class for finding playable music
+ * @constructor
+ */
 function Files(master)
 {
+    /** The MusicMaster object this is part of */
     this.master = master;
 }
 
+/**
+ * Returns a list of plugins enabled on the musicmaster server
+ */
 Files.prototype.get = function(success, failure)
 {
     this.master.get('plugin/',
@@ -10,6 +18,9 @@ Files.prototype.get = function(success, failure)
             failure);
 }
 
+/**
+ * Returns a list of plugins that have the specified capability name
+ */
 Files.prototype.listCapability = function(name, success, failure)
 {
     this.get(function(plugins){
@@ -34,6 +45,9 @@ Files.prototype.listCapability = function(name, success, failure)
     }, failure);
 }
 
+/**
+ * Returns a list of BrowseCapability objects
+ */
 Files.prototype.listBrowse = function(success, failure)
 {
     this.listCapability("browse", function(plugins)
@@ -48,6 +62,9 @@ Files.prototype.listBrowse = function(success, failure)
             }, failure);
 }
 
+/**
+ * Returns a list of SearchCapability objects
+ */
 Files.prototype.listSearch = function(success, failure)
 {
     this.listCapability("search", success, failure);
