@@ -149,5 +149,5 @@ Playlist.prototype.update = function(success, failure)
 
                 success(orig);
 
-            }, failure, prefetch);
+            }, failure, this.prefetch);
 }

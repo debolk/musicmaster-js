@@ -621,7 +621,7 @@ Playlist.prototype.update = function(success, failure)
 
                 success(orig);
 
-            }, failure, prefetch);
+            }, failure, this.prefetch);
 }
 /**
  * Represents a song in a playlist
