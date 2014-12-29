@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: playlist.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: playlist.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+ * Represents a playlist
+ * @constructor
+ */
+function Playlist(uri, data)
+{
+    /** The uri of the playlist */
+    this.uri = uri;
+    /** A list of PlaylistItem objects */
+    this.items = [];
+    /** The list of uids in this playlist */
+    this.uids = [];
+    /** Wether PlaylistItems should automatically fetch songdata */
+    this.prefetch = false;
+
+    for(var itemid in data.items)
+    {
+        var itemdata = data.items[itemid];
+        var item = new PlaylistItem(itemdata);
+        this.items.push(item);
+        this.uids.push(item.uri);
+    }
+
+    /** An overridable function that gets called when a new PlaylistItem is added during an update */
+    this.onAdd = function(playlistItem, index){};
+}
+
+/**
+ * Parses a playlist from a given uri
+ */
+Playlist.fromUri = function(uri, success, failure, prefetch)
+{
+    if(prefetch == undefined)
+        prefetch = false;
+
+    MusicMaster.get(uri, function(request) {
+        var playlist = new Playlist(uri, request.responseJson);
+
+        if(!prefetch)
+        {
+            success(playlist);
+            return;
+        }
+
+        playlist.prefetch = true;
+
+        var left = 0;
+        var errorResponse = undefined;
+
+        var done = function()
+        {
+            left--;
+            if(left > 0)
+                return;
+            
+            if(errorResponse != undefined)
+                failure(errorResponse);
+            else
+                success(playlist);
+        }
+
+        left = playlist.items.length;
+        for(var i = 0; i &lt; left; i++)
+            playlist.items[i].getSong(done, function(e) { errorResponse = e; done(); });
+
+    }, failure);
+}
+
+/**
+ * Appends a song to the playlist
+ */
+Playlist.prototype.append = function(song, success, failure)
+{
+    MusicMaster.post(this.uri, song, success, failure);
+}
+
+/** 
+ * Inserts a song before a specific PlaylistItem 
+ */
+Playlist.prototype.insert = function(song, before, success, failure)
+{
+    MusicMaster.post(before.uri, song, success, failure);
+}
+
+/**
+ * Automatically updates the current playlist with the version on the remote player
+ */
+Playlist.prototype.update = function(success, failure)
+{
+    var orig = this;
+    Playlist.fromUri(this.uri, function(newplaylist)
+            {
+                var removelist = [];
+                var addlist = [];
+                
+                for(var i = 0; i &lt; orig.uids.length; i++)
+                    if(newplaylist.uids.indexOf(orig.uids[i]) == -1)
+                        removelist.push(orig.uids[i]);
+
+                for(var i = 0; i &lt; newplaylist.uids.length; i++)
+                    if(orig.uids.indexOf(newplaylist.uids[i]) == -1)
+                        addlist.push(newplaylist.uids[i]);
+
+                for(var i = 0; i &lt; removelist.length; i++)
+                {
+                    var uri = removelist[i];
+                    orig.uids.splice(orig.uids.indexOf(uri), 1);
+                    for(var j = 0; j &lt; orig.items.length; j++)
+                        if(orig.items[j].uri == uri)
+                        {
+                            var item = orig.items[j];
+                            orig.items.splice(j, 1);
+                            item.onRemove(item, j);
+                            break;
+                        }
+                }
+
+                for(var i = 0; i &lt; addlist.length; i++)
+                {
+                    var uri = addlist[i];
+                    orig.uids.push(uri);
+                    for(var j = 0; j &lt; newplaylist.items.length; j++)
+                        if(newplaylist.items[j].uri == uri)
+                        {
+                            var item = newplaylist.items[j];
+                            orig.items.splice(j, 0, item);
+                            orig.onAdd(item, j);
+                        }
+                }
+
+                for(var i = 0; i &lt; orig.items.length; i++)
+                {
+                    if(orig.items[i].uri == newplaylist.items[i].uri)
+                        break;
+
+                    var item = orig.items[i];
+                    for(var j = 0; j &lt; newplaylist.items.length; j++)
+                    {
+                        if(item.uri != newplaylist.items[j].uri)
+                            continue;
+
+                        orig.items.splice(i, 1);
+                        orig.items.splice(j, 0, item);
+                        item.onMove(item, i, j);
+                        i--;
+                        break;
+                    }
+                }
+
+                success(orig);
+
+            }, failure, prefetch);
+}
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="BrowseCapability.html">BrowseCapability</a></li><li><a href="Directory.html">Directory</a></li><li><a href="Files.html">Files</a></li><li><a href="MjsPlayer.html">MjsPlayer</a></li><li><a href="MusicMaster.html">MusicMaster</a></li><li><a href="Players.html">Players</a></li><li><a href="Playlist.html">Playlist</a></li><li><a href="PlaylistItem.html">PlaylistItem</a></li><li><a href="Song.html">Song</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.0-dev</a> on Mon Dec 29 2014 17:37:47 GMT+0100 (CET)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

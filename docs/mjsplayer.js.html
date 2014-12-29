@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: mjsplayer.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: mjsplayer.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+ * A class for interacting with an MJS client
+ * @constructor
+ */
+function MjsPlayer(plugin)
+{
+    this.name = plugin.name;
+    this.uri = plugin.url;
+}
+
+/**
+ * Initializes this object with information on the remote player
+ */
+MjsPlayer.prototype.initialize = function(success, failure, prefetch)
+{
+    var orig = this;
+    this.getPlaylist(function(playlist){
+        orig.playlist = playlist;
+        success();
+    }, failure, prefetch);
+}
+
+/**
+ * Updates the information with information on the remote player
+ */
+MjsPlayer.prototype.update = function(success, failure)
+{
+    var orig = this;
+    if(this.playlist == undefined)
+    {
+        failure({"error": "Player not initialized"});
+        return;
+    }
+
+    var count = 0;
+    var errorRequest = undefined;
+
+    var close = function()
+    {
+        count++;
+        if(count &lt; 3)
+            return;
+
+        if(errorRequest != undefined)
+            failure(errorRequest);
+        else
+            success();
+    }
+
+    var error = function(request)
+    {
+        errorRequest = request;
+        close();
+    }
+
+    this.playlist.update(close, error);
+    this.getCurrent(function(state)
+            {
+                orig.currentState = state;
+                orig.currentSong = state.song;
+                orig.currentItem = state.url;
+                orig.duration = state.duration;
+                orig.position = state.position;
+                
+                if(orig.position == undefined)
+                    orig.estimatedStart = undefined;
+                else
+                    orig.estimatedStart = Date.now() - Date(orig.position * 1000);
+
+                close();
+            }, error);
+    this.getStatus(function(state)
+            {
+                orig.status = state;
+                close();
+            }, error);
+}
+
+/**
+ * Returns a Playlist object
+ */
+MjsPlayer.prototype.getPlaylist = function(success, failure, prefetch)
+{
+    Playlist.fromUri(this.uri + "/playlist", success, failure, prefetch);
+}
+
+/**
+ * Returns the current status of the player (playing, paused, stopped)
+ */
+MjsPlayer.prototype.getStatus = function(success, failure)
+{
+    MusicMaster.get(this.uri + "/status", function(request) {
+        success(request.responseJson.status);
+    }, failure);
+}
+
+/**
+ * Sets the player status to a specific value (playing, paused, stopped)
+ */
+MjsPlayer.prototype.setStatus = function(status, success, failure)
+{
+    var data = {"status": status};
+    MusicMaster.put(this.uri + "/status", data, success, failure);
+}
+
+/**
+ * Returns the current playback status
+ */
+MjsPlayer.prototype.getCurrent = function(success, failure)
+{
+    MusicMaster.get(this.uri + "/current", function(request){
+        success(request.responseJson);
+    }, failure);
+}
+
+/**
+ * Sets a specific PlaylistItem as current
+ */
+MjsPlayer.prototype.setCurrent = function(playlistItem, success, failure)
+{
+    MusicMaster.put(this.uri + "/current", {"uid": playlistItem.uri}, success, failure);
+}
+
+/**
+ * Resume playback
+ */
+MjsPlayer.prototype.play = function(success, failure)
+{
+    this.setStatus("playing", success, failure);
+}
+
+/**
+ * Pause playback
+ */
+MjsPlayer.prototype.pause = function(success, failure)
+{
+    this.setStatus("paused", success, failure);
+}
+
+/**
+ * Stops playback
+ */
+MjsPlayer.prototype.stop = function(success, failure)
+{
+    this.setStatus("stopped", success, failure);
+}
+
+/**
+ * Skips a number
+ */
+MjsPlayer.prototype.next = function(success, failure)
+{
+    MusicMaster.post(this.uri + "/current", {"action": "next"}, success, failure);
+}
+
+/**
+ * Got o previous number
+ */
+MjsPlayer.prototype.previous = function(success, failure)
+{
+    MusicMaster.post(this.uri + "/current", {"action": "previous"}, success, failure);
+}
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="BrowseCapability.html">BrowseCapability</a></li><li><a href="Directory.html">Directory</a></li><li><a href="Files.html">Files</a></li><li><a href="MjsPlayer.html">MjsPlayer</a></li><li><a href="MusicMaster.html">MusicMaster</a></li><li><a href="Players.html">Players</a></li><li><a href="Playlist.html">Playlist</a></li><li><a href="PlaylistItem.html">PlaylistItem</a></li><li><a href="Song.html">Song</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.0-dev</a> on Mon Dec 29 2014 17:37:47 GMT+0100 (CET)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>
