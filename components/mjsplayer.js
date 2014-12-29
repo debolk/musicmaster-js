@@ -16,7 +16,7 @@ MjsPlayer.prototype.initialize = function(success, failure, prefetch)
     var orig = this;
     this.getPlaylist(function(playlist){
         orig.playlist = playlist;
-        success();
+        orig.update(success, failure);
     }, failure, prefetch);
 }
 

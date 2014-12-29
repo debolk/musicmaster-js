@@ -1,20 +1,38 @@
+/**
+ * Represents a reference to a browseable music repository
+ * @constructor
+ */
 function BrowseCapability(plugin)
 {
     this.uri = plugin.url + "/browse/";
     this.name = plugin.name;
 }
 
+/**
+ * Returns a Directory representing the root of this repository.
+ */
 BrowseCapability.prototype.open = function(success, failure) { return Directory.fromUri(this.uri, success, failure); };
+/**
+ * Represents a directory in a music repository
+ * @constructor
+ */
 function Directory(data, previous)
 {
+    /** Constant "directory" */
     this.type = "directory";
 
+    /** The name of this directory */
     this.name = data.name;
+    /** A list of subdirectories (as uri) */
     this.entries = data.entries;
 
+    /** The parent directory or null if none */
     this.previous = previous;
 }
 
+/**
+ * Parses a uri to a directory
+ */
 Directory.fromUri = function(uri, success, failure)
 {
     MusicMaster.get(uri, function(request)
@@ -23,6 +41,9 @@ Directory.fromUri = function(uri, success, failure)
             }, failure);
 }
 
+/**
+ * Opens a subdirectory or a song and returns the corresponding object
+ */
 Directory.prototype.open = function(filename, success, failure)
 {
     MusicMaster.get(filename, function(request)
@@ -34,11 +55,19 @@ Directory.prototype.open = function(filename, success, failure)
                     success(new Directory(result, this));
             }, failure);
 }
+/**
+ * A class for finding playable music
+ * @constructor
+ */
 function Files(master)
 {
+    /** The MusicMaster object this is part of */
     this.master = master;
 }
 
+/**
+ * Returns a list of plugins enabled on the musicmaster server
+ */
 Files.prototype.get = function(success, failure)
 {
     this.master.get('plugin/',
@@ -46,6 +75,9 @@ Files.prototype.get = function(success, failure)
             failure);
 }
 
+/**
+ * Returns a list of plugins that have the specified capability name
+ */
 Files.prototype.listCapability = function(name, success, failure)
 {
     this.get(function(plugins){
@@ -70,6 +102,9 @@ Files.prototype.listCapability = function(name, success, failure)
     }, failure);
 }
 
+/**
+ * Returns a list of BrowseCapability objects
+ */
 Files.prototype.listBrowse = function(success, failure)
 {
     this.listCapability("browse", function(plugins)
@@ -84,25 +119,38 @@ Files.prototype.listBrowse = function(success, failure)
             }, failure);
 }
 
+/**
+ * Returns a list of SearchCapability objects
+ */
 Files.prototype.listSearch = function(success, failure)
 {
     this.listCapability("search", success, failure);
 }
+/**
+ * A class for interacting with an MJS client
+ * @constructor
+ */
 function MjsPlayer(plugin)
 {
     this.name = plugin.name;
     this.uri = plugin.url;
 }
 
-MjsPlayer.prototype.initialize = function(success, failure)
+/**
+ * Initializes this object with information on the remote player
+ */
+MjsPlayer.prototype.initialize = function(success, failure, prefetch)
 {
     var orig = this;
     this.getPlaylist(function(playlist){
         orig.playlist = playlist;
-        success();
-    }, failure);
+        orig.update(success, failure);
+    }, failure, prefetch);
 }
 
+/**
+ * Updates the information with information on the remote player
+ */
 MjsPlayer.prototype.update = function(success, failure)
 {
     var orig = this;
@@ -156,11 +204,17 @@ MjsPlayer.prototype.update = function(success, failure)
             }, error);
 }
 
-MjsPlayer.prototype.getPlaylist = function(success, failure)
+/**
+ * Returns a Playlist object
+ */
+MjsPlayer.prototype.getPlaylist = function(success, failure, prefetch)
 {
-    Playlist.fromUri(this.uri + "/playlist", success, failure);
+    Playlist.fromUri(this.uri + "/playlist", success, failure, prefetch);
 }
 
+/**
+ * Returns the current status of the player (playing, paused, stopped)
+ */
 MjsPlayer.prototype.getStatus = function(success, failure)
 {
     MusicMaster.get(this.uri + "/status", function(request) {
@@ -168,12 +222,18 @@ MjsPlayer.prototype.getStatus = function(success, failure)
     }, failure);
 }
 
+/**
+ * Sets the player status to a specific value (playing, paused, stopped)
+ */
 MjsPlayer.prototype.setStatus = function(status, success, failure)
 {
     var data = {"status": status};
     MusicMaster.put(this.uri + "/status", data, success, failure);
 }
 
+/**
+ * Returns the current playback status
+ */
 MjsPlayer.prototype.getCurrent = function(success, failure)
 {
     MusicMaster.get(this.uri + "/current", function(request){
@@ -181,35 +241,59 @@ MjsPlayer.prototype.getCurrent = function(success, failure)
     }, failure);
 }
 
+/**
+ * Sets a specific PlaylistItem as current
+ */
 MjsPlayer.prototype.setCurrent = function(playlistItem, success, failure)
 {
     MusicMaster.put(this.uri + "/current", {"uid": playlistItem.uri}, success, failure);
 }
 
+/**
+ * Resume playback
+ */
 MjsPlayer.prototype.play = function(success, failure)
 {
     this.setStatus("playing", success, failure);
 }
 
+/**
+ * Pause playback
+ */
 MjsPlayer.prototype.pause = function(success, failure)
 {
     this.setStatus("paused", success, failure);
 }
 
+/**
+ * Stops playback
+ */
 MjsPlayer.prototype.stop = function(success, failure)
 {
     this.setStatus("stopped", success, failure);
 }
 
+/**
+ * Skips a number
+ */
 MjsPlayer.prototype.next = function(success, failure)
 {
     MusicMaster.post(this.uri + "/current", {"action": "next"}, success, failure);
 }
 
+/**
+ * Got o previous number
+ */
 MjsPlayer.prototype.previous = function(success, failure)
 {
     MusicMaster.post(this.uri + "/current", {"action": "previous"}, success, failure);
 }
+/**
+ * The root object of this library.
+ * Create a MusicMaster object that points to your musicmaster server:
+ *  var master = new MusicMaster("http://www.example.com/musicmaster/");
+ * @constructor
+ */
 function MusicMaster(uri)
 {
     this.uri = uri;
@@ -219,6 +303,10 @@ function MusicMaster(uri)
     this.files = new Files(this);
 }
 
+/**
+ * Certain operations require authorization. For these operations a valid access token is required. This token can be obtained through oauth and set here.
+ * The access token is global for all musicmasters.
+ */
 MusicMaster.accessToken = "";
 
 //Utility functions
@@ -242,6 +330,9 @@ MusicMaster._onload = function(request, success, failure)
         }
     }
 
+/**
+ * Does an ajax GET request and aprses the results as JSON
+ */
 MusicMaster.get = function(uri, success, failure)
 {
     var request = new XMLHttpRequest();
@@ -252,6 +343,9 @@ MusicMaster.get = function(uri, success, failure)
     request.send();
 }
 
+/**
+ * Does an ajax POST request with the given data and aprses the results as JSON
+ */
 MusicMaster.post = function(uri, data, success, failure)
 {
     if(MusicMaster.accessToken != "")
@@ -272,6 +366,9 @@ MusicMaster.post = function(uri, data, success, failure)
     request.send(encoding);
 }
 
+/**
+ * Does an ajax DELETE request and aprses the results as JSON
+ */
 MusicMaster.delete = function(uri, success, failure)
 {
     if(MusicMaster.accessToken != "")
@@ -291,6 +388,9 @@ MusicMaster.delete = function(uri, success, failure)
     request.send();
 }
 
+/**
+ * Does an ajax PUT request with the given data and aprses the results as JSON
+ */
 MusicMaster.put = function(uri, success, failure)
 {
     if(MusicMaster.accessToken != "")
@@ -308,11 +408,18 @@ MusicMaster.put = function(uri, success, failure)
 
     request.send();
 }
+/**
+ * A class for finding players
+ * @constructor
+ */
 function Players(master)
 {
     this.master = master;
 }
 
+/**
+ * Fetches the list of players
+ */
 Players.prototype.get = function(success, failure)
 {
     this.master.get('player',
@@ -320,7 +427,10 @@ Players.prototype.get = function(success, failure)
             failure);
 }
 
-Players.prototype.listCapability = function(name, success, failure)
+/**
+ * Returns a list of players that have a specified capability name
+ */
+Players.prototype.getCapability = function(name, success, failure)
 {
     this.get(function(plugins){
         var result = [];
@@ -344,9 +454,12 @@ Players.prototype.listCapability = function(name, success, failure)
     }, failure);
 }
 
-Players.prototype.listMjs = function(success, failure)
+/**
+ * Returns a list of MjsPlayer objects
+ */
+Players.prototype.getMjs = function(success, failure)
 {
-    this.listCapability("mjs", function(plugins)
+    this.getCapability("mjs", function(plugins)
             {
                 var result = [];
                 for(id in plugins)
@@ -357,11 +470,19 @@ Players.prototype.listMjs = function(success, failure)
                 success(result);
             }, failure);
 }
+/**
+ * Represents a playlist
+ * @constructor
+ */
 function Playlist(uri, data)
 {
+    /** The uri of the playlist */
     this.uri = uri;
+    /** A list of PlaylistItem objects */
     this.items = [];
+    /** The list of uids in this playlist */
     this.uids = [];
+    /** Wether PlaylistItems should automatically fetch songdata */
     this.prefetch = false;
 
     for(var itemid in data.items)
@@ -372,9 +493,13 @@ function Playlist(uri, data)
         this.uids.push(item.uri);
     }
 
+    /** An overridable function that gets called when a new PlaylistItem is added during an update */
     this.onAdd = function(playlistItem, index){};
 }
 
+/**
+ * Parses a playlist from a given uri
+ */
 Playlist.fromUri = function(uri, success, failure, prefetch)
 {
     if(prefetch == undefined)
@@ -413,16 +538,25 @@ Playlist.fromUri = function(uri, success, failure, prefetch)
     }, failure);
 }
 
-Playlist.prototype.push = function(song, success, failure)
+/**
+ * Appends a song to the playlist
+ */
+Playlist.prototype.append = function(song, success, failure)
 {
     MusicMaster.post(this.uri, song, success, failure);
 }
 
+/** 
+ * Inserts a song before a specific PlaylistItem 
+ */
 Playlist.prototype.insert = function(song, before, success, failure)
 {
     MusicMaster.post(before.uri, song, success, failure);
 }
 
+/**
+ * Automatically updates the current playlist with the version on the remote player
+ */
 Playlist.prototype.update = function(success, failure)
 {
     var orig = this;
@@ -489,16 +623,28 @@ Playlist.prototype.update = function(success, failure)
 
             }, failure, prefetch);
 }
+/**
+ * Represents a song in a playlist
+ * @constructor
+ */
 function PlaylistItem(data)
 {
+    /** The uri of this object (also uid) */
     this.uri = data.url;
+    /** The physical location of the song (may or may not be accessible from the web) */
     this.location = data.url;
+    /** The uri of the song data */
     this.songUri = data.song;
 
+    /** This overridable function gets called when this PlaylistItem is removed from a playlist */
     this.onRemove = function(playlistItem, index){};
+    /** This overridable function gets called when this PlaylistItem moves within the playlist */
     this.onMove = function(playlistItem, oldindex, newindex){};
 }
 
+/**
+ * Fetches the song corresponding to this PlaylistItem
+ */
 PlaylistItem.prototype.getSong = function(success, failure)
 {
     if(this.song != undefined)
@@ -514,18 +660,31 @@ PlaylistItem.prototype.getSong = function(success, failure)
             }, failure);
 }
 
+/**
+ * Represents a song that can be played
+ * @constructor
+ */
 function Song(uri, data)
 {
+    /** The uri of this song */
     this.uri = uri;
 
+    /** Constant "song" */
     this.type = "song";
+
+    /** The title of the song (can be unknown) */
     this.title = data.title;
+    /** The artist of the song (can be unknown) */
     this.artist = data.artist;
+    /** The physical location of the song */
     this.location = data.location;
     if(data.url != undefined)
         this.uri = data.url;
 }
 
+/** 
+ * Parses a song from a given uri
+ */
 Song.fromUri = function(uri, success, failure)
 {
     MusicMaster.get(uri, function(request)
