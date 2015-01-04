@@ -118,3 +118,28 @@ MusicMaster.put = function(uri, success, failure)
 
     request.send();
 }
+
+/**
+ * Awaits multiple callback functions
+ */
+MusicMaster.waitFor = function(functions, success, failure)
+{
+    var total = functions.length;
+    var left = total;
+    var errorMessage = undefined;
+    
+    var close = function()
+    {
+        total--;
+        if(total > 0)
+            return;
+
+        if(errorRequest != undefined)
+            failure(errorRequest);
+        else
+            success();
+    }
+
+    for(var i = 0; i < total; i++)
+        functions[i](close, function(e) { errorMessage = e; close(); });
+}
