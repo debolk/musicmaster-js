@@ -135,10 +135,12 @@ function MjsPlayer(plugin)
 {
     this.name = plugin.name;
     this.uri = plugin.url;
+    this.playlist = new Playlist(this.uri + "/playlist", Array());
 }
 
 /**
  * Initializes this object with information on the remote player
+ * @deprecated No longer neccecary, set player.playlist.prefetch = true;
  */
 MjsPlayer.prototype.initialize = function(success, failure, prefetch)
 {
