@@ -32,12 +32,13 @@ Directory.fromUri = function(uri, success, failure)
  */
 Directory.prototype.open = function(filename, success, failure)
 {
+    current = this;
     MusicMaster.get(filename, function(request)
             {
                 var result = request.responseJson;
                 if(result.type == "song")
                     success(new Song(filename, result));
                 if(result.type == "directory")
-                    success(new Directory(result, this));
+                    success(new Directory(result, current));
             }, failure);
 }
