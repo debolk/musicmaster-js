@@ -61,7 +61,12 @@ Playlist.fromUri = function(uri, success, failure, prefetch)
 
         left = playlist.items.length;
         for(var i = 0; i < left; i++)
-            playlist.items[i].getSong(done, function(e) { errorResponse = e; done(); });
+        {
+            if(playlist.items[i].songUri !== undefined)
+                playlist.items[i].getSong(done, function(e) { errorResponse = e; done(); });
+            else
+                playlist.items[i].song = undefined;
+        }
 
     }, failure);
 }
