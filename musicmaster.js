@@ -706,6 +706,8 @@ function Song(uri, data)
     this.location = data.location;
     if(data.url != undefined)
         this.uri = data.url;
+    if(data.length != undefined)
+        this.length = data.length;
 }
 
 /** 
