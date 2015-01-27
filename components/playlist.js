@@ -63,8 +63,8 @@ Playlist.fromUri = function(uri, success, failure, prefetch)
         {
             if(playlist.items[i].songUri !== undefined)
             {
-                playlist.items[i].getSong(done, function(e) { errorResponse = e; done(); });
                 left++;
+                playlist.items[i].getSong(done, function(e) { errorResponse = e; done(); });
             }
             else
                 playlist.items[i].song = undefined;
