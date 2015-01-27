@@ -559,6 +559,9 @@ Playlist.fromUri = function(uri, success, failure, prefetch)
                 success(playlist);
         }
 
+        //Make sure cached entries won't trigger success multiple times
+        left++;
+        
         for(var i = 0; i < playlist.items.length; i++)
         {
             if(playlist.items[i].songUri !== undefined)
@@ -570,6 +573,8 @@ Playlist.fromUri = function(uri, success, failure, prefetch)
                 playlist.items[i].song = undefined;
         }
 
+        //And correct afterwards
+        left--;
         if(left == 0)
             success(playlist);
 
