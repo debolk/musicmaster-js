@@ -59,24 +59,19 @@ Playlist.fromUri = function(uri, success, failure, prefetch)
                 success(playlist);
         }
 
-        //Make sure cached entries won't trigger success multiple times
-        left++;
-        
+        left = playlist.items.length;
         for(var i = 0; i < playlist.items.length; i++)
         {
             if(playlist.items[i].songUri !== undefined)
             {
-                left++;
                 playlist.items[i].getSong(done, function(e) { errorResponse = e; done(); });
             }
             else
+            {
                 playlist.items[i].song = undefined;
+                left--;
+            }
         }
-
-        //And correct afterwards
-        left--;
-        if(left == 0)
-            success(playlist);
 
     }, failure);
 }

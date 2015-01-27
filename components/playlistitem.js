@@ -7,7 +7,7 @@ function PlaylistItem(data)
     /** The uri of this object (also uid) */
     this.uri = data.url;
     /** The physical location of the song (may or may not be accessible from the web) */
-    this.location = data.url;
+    this.location = data.location;
     /** The uri of the song data */
     this.songUri = data.song;
 
@@ -28,9 +28,11 @@ PlaylistItem.prototype.getSong = function(success, failure)
         return;
     }
 
+    var context = this;
+
     Song.fromUri(this.songUri, function(song)
             {
-                this.song = song;
+                context.song = song;
                 success(song);
             }, failure);
 }

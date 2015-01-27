@@ -394,7 +394,7 @@ MusicMaster.delete = function(uri, success, failure)
 /**
  * Does an ajax PUT request with the given data and aprses the results as JSON
  */
-MusicMaster.put = function(uri, success, failure)
+MusicMaster.put = function(uri, data, success, failure)
 {
     if(MusicMaster.accessToken != "")
     {
@@ -409,7 +409,7 @@ MusicMaster.put = function(uri, success, failure)
     request.onload = function() { MusicMaster._onload(request, success, failure); };
     request.onerror = failure;
 
-    request.send();
+    request.send(JSON.stringify(data));
 }
 
 /**
@@ -559,24 +559,19 @@ Playlist.fromUri = function(uri, success, failure, prefetch)
                 success(playlist);
         }
 
-        //Make sure cached entries won't trigger success multiple times
-        left++;
-        
+        left = playlist.items.length;
         for(var i = 0; i < playlist.items.length; i++)
         {
             if(playlist.items[i].songUri !== undefined)
             {
-                left++;
                 playlist.items[i].getSong(done, function(e) { errorResponse = e; done(); });
             }
             else
+            {
                 playlist.items[i].song = undefined;
+                left--;
+            }
         }
-
-        //And correct afterwards
-        left--;
-        if(left == 0)
-            success(playlist);
 
     }, failure);
 }
@@ -675,7 +670,7 @@ function PlaylistItem(data)
     /** The uri of this object (also uid) */
     this.uri = data.url;
     /** The physical location of the song (may or may not be accessible from the web) */
-    this.location = data.url;
+    this.location = data.location;
     /** The uri of the song data */
     this.songUri = data.song;
 
@@ -696,9 +691,11 @@ PlaylistItem.prototype.getSong = function(success, failure)
         return;
     }
 
+    var context = this;
+
     Song.fromUri(this.songUri, function(song)
             {
-                this.song = song;
+                context.song = song;
                 success(song);
             }, failure);
 }

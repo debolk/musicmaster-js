@@ -101,7 +101,7 @@ MusicMaster.delete = function(uri, success, failure)
 /**
  * Does an ajax PUT request with the given data and aprses the results as JSON
  */
-MusicMaster.put = function(uri, success, failure)
+MusicMaster.put = function(uri, data, success, failure)
 {
     if(MusicMaster.accessToken != "")
     {
@@ -116,7 +116,7 @@ MusicMaster.put = function(uri, success, failure)
     request.onload = function() { MusicMaster._onload(request, success, failure); };
     request.onerror = failure;
 
-    request.send();
+    request.send(JSON.stringify(data));
 }
 
 /**
