@@ -22,13 +22,23 @@ function Song(uri, data)
         this.length = data.length;
 }
 
+Song.cache = Array();
+
 /** 
  * Parses a song from a given uri
  */
 Song.fromUri = function(uri, success, failure)
 {
+    if(Song.cache[uri] !== undefined)
+    {
+        success(Song.cache[uri]);
+        return;
+    }
+
     MusicMaster.get(uri, function(request)
             {
-                success(new Song(uri, request.responseJson));
+                var song = new Song(uri, request.responseJson);
+                Song.cache[uri] = song;
+                success(song);
             }, failure);
 }
