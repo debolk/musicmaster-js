@@ -37,3 +37,7 @@ PlaylistItem.prototype.getSong = function(success, failure)
             }, failure);
 }
 
+PlaylistItem.prototype.remove = function(success, failure)
+{
+    MusicMaster.delete(this.uri, success, failure);
+}

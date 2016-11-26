@@ -593,6 +593,14 @@ Playlist.prototype.insert = function(song, before, success, failure)
 }
 
 /**
+ * Clear playlist
+ */
+Playlist.prototype.clear = function(success, failure)
+{
+    MusicMaster.delete(this.uri, success, failure);
+}
+
+/**
  * Automatically updates the current playlist with the version on the remote player
  */
 Playlist.prototype.update = function(success, failure)
@@ -700,6 +708,10 @@ PlaylistItem.prototype.getSong = function(success, failure)
             }, failure);
 }
 
+PlaylistItem.prototype.remove = function(success, failure)
+{
+    MusicMaster.delete(this.uri, success, failure);
+}
 /**
  * Represents a song that can be played
  * @constructor
