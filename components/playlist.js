@@ -52,7 +52,7 @@ Playlist.fromUri = function(uri, success, failure, prefetch)
             left--;
             if(left > 0)
                 return;
-            
+
             if(errorResponse != undefined)
                 failure(errorResponse);
             else
@@ -84,8 +84,8 @@ Playlist.prototype.append = function(song, success, failure)
     MusicMaster.post(this.uri, song, success, failure);
 }
 
-/** 
- * Inserts a song before a specific PlaylistItem 
+/**
+ * Inserts a song before a specific PlaylistItem
  */
 Playlist.prototype.insert = function(song, before, success, failure)
 {
@@ -110,7 +110,7 @@ Playlist.prototype.update = function(success, failure)
             {
                 var removelist = [];
                 var addlist = [];
-                
+
                 for(var i = 0; i < orig.uids.length; i++)
                     if(newplaylist.uids.indexOf(orig.uids[i]) == -1)
                         removelist.push(orig.uids[i]);
@@ -149,7 +149,7 @@ Playlist.prototype.update = function(success, failure)
                 for(var i = 0; i < orig.items.length; i++)
                 {
                     if(orig.items[i].uri == newplaylist.items[i].uri)
-                        break;
+                        continue;
 
                     var item = orig.items[i];
                     for(var j = 0; j < newplaylist.items.length; j++)
@@ -161,7 +161,6 @@ Playlist.prototype.update = function(success, failure)
                         orig.items.splice(j, 0, item);
                         item.onMove(item, i, j);
                         i--;
-                        break;
                     }
                 }
 
